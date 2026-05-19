@@ -11,8 +11,8 @@ import {
   HTMLContentsResponseSchema,
   ListResponseSchema,
   TableOfContentsResponseSchema,
-} from "./proto/ablibrary/services/book_service/book_service_pb.js";
-import { SearchService } from "./proto/ablibrary/services/search_service/search_service_pb.js";
+} from "./proto/ablibrary/services/book_service/book_service_pb.ts";
+import { SearchService } from "./proto/ablibrary/services/search_service/search_service_pb.ts";
 
 dotenv.config();
 
