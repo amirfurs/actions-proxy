@@ -119,19 +119,63 @@ app.get("/abl/search", async (req, res) => {
 
     const page = Math.max(1, Number(req.query.page || 1));
     const perPage = Math.min(50, Math.max(1, Number(req.query.perPage || 20)));
-    const { search } = makeClients(lang);
+    const { search, book } = makeClients(lang);
 
-    const idx = await search.listIndexBackends({});
-    const backendId = idx?.indexes?.[0]?.backendId || "";
+    try {
+      const idx: any = await search.listIndexBackends({} as any);
+      const list = idx?.indexes || idx?.items || [];
+      const backendId = list?.[0]?.backendId || list?.[0]?.id || "";
 
-    const out = await search.search({
-      backendId,
-      query: q,
-      pagination: { page, perPage },
+      const out: any = await search.search({
+        backendId,
+        query: q,
+        page,
+        perPage,
+      } as any);
+
+      return res.json(out);
+    } catch (inner: any) {
+      // Fallback when SearchService is unimplemented on this backend
+      if (String(inner?.message || "").toLowerCase().includes("unimplemented")) {
+        const out = await book.list({ query: q, pagination: { page, perPage } } as any);
+        return res.json({
+          source: "book.list-fallback",
+          query: q,
+          ...toJson(ListResponseSchema, out),
+        });
+      }
+      throw inner;
+    }
+  } catch (e: any) {
+    res.status(502).json({ error: e?.message ?? "ABL request failed" });
+  }
+});
+
+app.get("/abl/search/author", async (req, res) => {
+  try {
+    const lang = String(req.query.lang || "ar");
+    const q = String(req.query.q || "").trim().toLowerCase();
+    if (!q) return res.status(400).json({ error: "q is required" });
+
+    const page = Math.max(1, Number(req.query.page || 1));
+    const perPage = Math.min(50, Math.max(1, Number(req.query.perPage || 20)));
+
+    const { book } = makeClients(lang);
+    const out = await book.list({ query: q, pagination: { page, perPage } } as any);
+    const json: any = toJson(ListResponseSchema, out);
+    const books = Array.isArray(json?.books) ? json.books : [];
+
+    const filtered = books.filter((b: any) => {
+      const names = (b?.contributors || []).map((c: any) => String(c?.name || "").toLowerCase());
+      return names.some((n: string) => n.includes(q));
     });
 
-    res.json(out);
-  } catch (e) {
+    res.json({
+      query: q,
+      count: filtered.length,
+      books: filtered,
+    });
+  } catch (e: any) {
     res.status(502).json({ error: e?.message ?? "ABL request failed" });
   }
 });
