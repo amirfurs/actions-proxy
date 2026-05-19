@@ -2,9 +2,9 @@
   "name": "abl-gpt-proxy",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.mjs",
+  "main": "server.ts",
   "scripts": {
-    "start": "node --import tsx server.mjs"
+    "start": "node --import tsx server.ts"
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.12.0",
