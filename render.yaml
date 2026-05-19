@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: abl-gpt-actions-proxy
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: API_KEY
+        sync: false
